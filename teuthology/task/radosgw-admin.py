@@ -562,6 +562,9 @@ def task(ctx, config):
     assert len(out) == 1
     assert out[0] == underscore_bucket_name
 
+    test_key.delete()
+    underscore_bucket.delete()
+
     # TESTCASE 'caps-add', 'caps', 'add', 'add user cap', 'succeeds'
     caps='user=read'
     (err, out) = rgwadmin(ctx, client, ['caps', 'add', '--uid', user1, '--caps', caps])
