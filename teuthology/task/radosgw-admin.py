@@ -163,12 +163,26 @@ def task(ctx, config):
     assert out['keys'][0]['secret_key'] == secret_key
 
     # TESTCASE 'add-swift-key','key','create','swift key','succeeds'
+    subuser_access = 'full-control'
+
     (err, out) = rgwadmin(ctx, client, [
             'subuser', 'create', '--subuser', subuser1,
+            '--access', subuser_access
+            ])
+    assert not err
+
+    # TESTCASE 'add-swift-key','key','create','swift key','succeeds'
+    (err, out) = rgwadmin(ctx, client, [
+            'subuser', 'modify', '--subuser', subuser1,
             '--secret', swift_secret1,
             '--key-type', 'swift',
             ])
     assert not err
+
+    # TESTCASE 'subuser-perm-mask', 'subuser', 'info', 'test subuser perm mask durability', 'succeeds'
+    (err, out) = rgwadmin(ctx, client, ['user', 'info', '--uid', user1])
+
+    assert out['subusers'][0]['perm-mask'] == subuser_access
 
     # TESTCASE 'info-swift-key','user','info','after key addition','returns all keys'
     (err, out) = rgwadmin(ctx, client, ['user', 'info', '--uid', user1])
