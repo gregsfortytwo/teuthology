@@ -70,6 +70,18 @@ def normalize_config(ctx, config):
                     new_config[name] = role_config
     return new_config
 
+def _find_arch_and_dist(ctx):
+    """
+    Return the arch and distro value as a tuple.  This assumes that the
+    machine name can be used to determine this information.  Existing code
+    looks for the text "mira," so there is already a precedent set for this
+    bogosity.
+    """
+    info = ctx.config.get('machine_type', 'plana')
+    if info == 'tala':
+        return ('armv7l', 'quantal')
+    return ('x86_64', 'precise')
+
 def validate_config(ctx, config):
     for _, roles_for_host in ctx.cluster.remotes.iteritems():
         kernel = None
@@ -180,13 +192,14 @@ def download_deb(ctx, config):
         else:
             log.info('Downloading kernel {sha1} on {role}...'.format(sha1=src,
                                                                      role=role))
+            larch, ldist = _find_arch_and_dist(ctx)
             _, deb_url = teuthology.get_ceph_binary_url(
                 package='kernel',
                 sha1=src,
                 format='deb',
                 flavor='basic',
-                arch='x86_64',
-                dist='precise',
+                arch=larch,
+                dist=ldist,
                 )
 
             log.info('fetching kernel from {url}'.format(url=deb_url))
@@ -457,15 +470,25 @@ def task(ctx, config):
                 log.info('unable to extract sha1 from deb path, forcing install')
                 assert False
         else:
+            nsha1 = ''
+            if 'overrides' in ctx.config:
+                if 'ceph' in ctx.config['overrides']:
+                    if 'sha1' in ctx.config['overrides']['ceph']:
+                        nsha1 = ctx.config['overrides']['ceph']['sha1']
+                        log.info("Overridden sha1 is: %s", nsha1)
+            if not nsha1:
+                nsha1 = role_config.get('sha1')
+            larch, ldist = _find_arch_and_dist(ctx)
             sha1, _ = teuthology.get_ceph_binary_url(
                 package='kernel',
                 branch=role_config.get('branch'),
                 tag=role_config.get('tag'),
-                sha1=role_config.get('sha1'),
+                sha1=nsha1,
+                #sha1=role_config.get('sha1'),
                 flavor='basic',
                 format='deb',
-                dist='precise',
-                arch='x86_64',
+                dist=ldist,
+                arch=larch,
                 )
             log.debug('sha1 for {role} is {sha1}'.format(role=role, sha1=sha1))
             ctx.summary['{role}-kernel-sha1'.format(role=role)] = sha1
