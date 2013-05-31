@@ -203,6 +203,11 @@ def download_deb(ctx, config):
                 )
 
             log.info('fetching kernel from {url}'.format(url=deb_url))
+            log.info('Look for arch here===============================================')
+            log.info(ctx)
+            log.info('=================================================================')
+            # Brute force the setting of the kernel.
+            deb_url = 'http://gitbuilder.ceph.com/kernel-deb-quantal-armv7l-basic/ref/master/linux-image-3.9.0-ceph-b5b09be3-highbank_3.9.0-ceph-b5b09be3-highbank-1_armhf.deb'
             proc = role_remote.run(
                 args=[
                     'sudo', 'rm', '-f', '/tmp/linux-image.deb',
