@@ -59,8 +59,9 @@ def task(ctx, config):
     testdir = teuthology.get_testdir(ctx)
     coverage_dir = '{tdir}/archive/coverage'.format(tdir=testdir)
     for rems, roles in remotes.iteritems():
-        for id_ in roles:
-            if id_ in api_clients:
+        for whole_id_ in roles:
+            if whole_id_ in api_clients:
+                id_ = whole_id[7:]
                 keyring = '/etc/ceph/ceph.client.rest{id}.keyring'.format(
                         id=id_)
                 rems.run(
@@ -92,9 +93,9 @@ def task(ctx, config):
                     '-n',
                     'client.rest{id}'.format(id=id_), ]
                 ctx.daemons.add_daemon(rems, 'client',
-                        'client{id}'.format(id=id_)
+                        'client{id}'.format(id=id_),
                         args=run_cmd,
-                        logger=log.getChild('client.rest{id}'.format(id=id_))
+                        logger=log.getChild('client.rest{id}'.format(id=id_)),
                         stdin=run.PIPE,
                         wait=False,
                         )
@@ -103,8 +104,9 @@ def task(ctx, config):
 
     finally:
         for rems, roles in remotes.iteritems():
-       	    for id_ in roles:
-                if id_ in api_clients:
+       	    for whole_id_ in roles:
+                if whole_id_ in api_clients:
+                    id_ = whole_id[7:]
                     keyring = '/etc/ceph/ceph.client.rest{id}.keyring'.format(
                             id=id_)
                     rems.run( 
